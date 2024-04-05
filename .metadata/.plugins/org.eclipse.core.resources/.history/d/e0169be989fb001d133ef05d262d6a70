@@ -1,0 +1,29 @@
+package com.solution;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+
+@SpringBootTest(classes= {EmployeeServiceImplTest.class})
+public class EmployeeServiceImplTest {
+@InjectMocks
+EmployeeServiceImplTest employeeServiceImpl;
+@Mock
+MongoTemplate mongoTemplate;
+
+@BeforeEach
+public void init()
+{
+	
+}
+@Test
+public void getEmployeesTest()
+{ when(mongoTemplate.)
+
+	
+}
+
+}

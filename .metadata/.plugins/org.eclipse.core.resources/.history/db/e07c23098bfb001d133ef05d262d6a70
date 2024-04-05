@@ -1,0 +1,34 @@
+package com.solution;
+
+import javax.management.Query;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+
+import com.solution.model.Employee;
+
+@SpringBootTest(classes= {EmployeeServiceImplTest.class})
+public class EmployeeServiceImplTest {
+@InjectMocks
+EmployeeServiceImplTest employeeServiceImpl;
+@Mock
+MongoTemplate mongoTemplate;
+
+@BeforeEach
+public void init()
+{
+	
+}
+@Test
+public void getEmployeesTest()
+{ when(mongoTemplate.find(Mockito.any(Query.class),Mockito.eq(Employee.class))).
+
+	
+}
+
+}

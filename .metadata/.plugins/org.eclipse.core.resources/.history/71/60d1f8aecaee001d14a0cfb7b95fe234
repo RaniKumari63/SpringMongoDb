@@ -1,0 +1,32 @@
+package com.solution.model;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateCustomerRequest {
+@NotNull(message="FirstName Cannot Be Null")
+@NotBlank(message="FirstName Cannot Be null")
+private String firstName;
+@NotNull(message="LastName Cannot Be Null")
+@NotBlank(message="LastName Cannot Be null")
+private String lastName;
+@NotNull(message="Email Cannot Be Null")
+@Email(message="Email Must Be Correct Format")
+private String email;
+
+@NotNull(message="PhoneNo Cannot Be Null")
+private String phone;
+private Address address;
+@NotNull(message="Password Cannot Be Null")
+private String password;
+@NotNull(message="Role Cannot Be Null")
+private String role;
+
+}

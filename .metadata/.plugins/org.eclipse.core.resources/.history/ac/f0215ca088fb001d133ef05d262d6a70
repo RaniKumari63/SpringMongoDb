@@ -1,0 +1,14 @@
+package com.solution;
+
+import org.mockito.InjectMocks;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+
+@SpringBootTest(classes= {EmployeeServiceImplTest.class})
+public class EmployeeServiceImplTest {
+@InjectMocks
+EmployeeServiceImplTest employeeServiceImpl;
+@Mock
+MongoTemplate mongoTemplate
+
+}

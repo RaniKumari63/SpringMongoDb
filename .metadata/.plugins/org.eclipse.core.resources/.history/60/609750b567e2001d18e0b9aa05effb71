@@ -1,0 +1,9 @@
+package com.suchiit.model;
+
+public class Employee {
+private String id;
+private String firstName;
+private String lastName;
+private float salary;
+private Address address;
+}

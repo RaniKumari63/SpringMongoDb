@@ -1,0 +1,38 @@
+package com.solution.service;
+
+import java.util.List;
+
+import org.springframework.http.ResponseEntity;
+
+import com.solution.model.Blocker;
+import com.solution.model.CreateEmployeeRequest;
+import com.solution.model.CreateTaskRequest;
+import com.solution.model.Employee;
+import com.solution.model.Task;
+import com.solution.model.UpdateCustomerRequest;
+import com.solution.model.UpdateEmployeeRequest;
+import com.solution.model.UpdateTaskRequest;
+
+public interface EmployeeService {
+	public ResponseEntity<?> createEmployee(CreateEmployeeRequest request);
+	public ResponseEntity<?> getEmployees(String searchInput);
+ public ResponseEntity<?> getAllEmployees();
+	public ResponseEntity<?> getEmployeeById(String id);
+
+
+	public ResponseEntity<?> updateEmployee(UpdateEmployeeRequest request);
+	public ResponseEntity<?> deleteEmployee(String employeeId);
+
+	public ResponseEntity<?> createTask(CreateTaskRequest request);
+	public ResponseEntity<?> getTasks(String searchInput);
+	public ResponseEntity<?> getTaskById(String taskId);
+	public ResponseEntity<?> updateTask(UpdateTaskRequest request);
+	public ResponseEntity<?> deleteTask(String taskId);
+	public ResponseEntity<?> getEmployeeByIdWithTask(String employeeId);
+	
+
+	public ResponseEntity<?> getEmployeeTrack(String managerId);
+
+	public ResponseEntity<?> addBlockers(String employeeId, String taskId, List<Blocker> blockers);
+
+}

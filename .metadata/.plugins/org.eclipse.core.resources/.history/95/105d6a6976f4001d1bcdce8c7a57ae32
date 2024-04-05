@@ -1,0 +1,459 @@
+package com.solution.service.impl;
+
+import java.util.ArrayList;
+import java.util.Base64;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.regex.Pattern;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+
+import com.solution.constant.StatusConstants;
+import com.solution.model.Blocker;
+import com.solution.model.CreateEmployeeRequest;
+import com.solution.model.CreateTaskRequest;
+
+import com.solution.model.Employee;
+import com.solution.model.Task;
+
+import com.solution.model.UpdateEmployeeRequest;
+import com.solution.model.UpdateTaskRequest;
+import com.solution.service.EmployeeService;
+
+import io.micrometer.common.util.StringUtils;
+@Service
+public class EmployeeServiceImpl implements EmployeeService {
+	@Autowired
+	MongoTemplate mongoTemplate;
+
+	@Override
+	public ResponseEntity<String> createEmployee(CreateEmployeeRequest request) {
+		Random rand = new Random();
+		;
+		String employeeNameSub = null;
+		Criteria criteria = new Criteria();
+		criteria.orOperator(
+				Criteria.where("employeeEmailId").regex(
+						Pattern.compile(request.getEmployeeEmailId(), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+				Criteria.where("phone")
+						.regex(Pattern.compile(request.getPhone(), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)));
+		Query query = new Query(criteria);
+		Employee employee = this.mongoTemplate.findOne(query, Employee.class);
+		if (employee == null) {
+			Employee newEmployee = new Employee();
+			BeanUtils.copyProperties(request, newEmployee);
+
+			if (StringUtils.isNotEmpty(newEmployee.getEmployeeName()) && newEmployee.getEmployeeName() != null) {
+
+				if (newEmployee.getEmployeeName().length() > 3)
+					employeeNameSub = newEmployee.getEmployeeName().substring(0, 3);
+				else
+					employeeNameSub = newEmployee.getEmployeeName();
+
+			}
+
+			newEmployee.setEmployeeId(employeeNameSub + 1 + rand.nextInt(99));
+			
+			byte[] decryptedPassword = Base64.getDecoder().decode(request.getPassword());
+		
+			 String encryptPassword=Base64.getEncoder().encodeToString(decryptedPassword);
+			
+		 newEmployee.setPassword(encryptPassword);
+			 
+		//	String encryptPassword = new String(decryptedPassword);
+
+			//newEmployee.setPassword(new BCryptPasswordEncoder().encode(encryptPassword));
+			newEmployee.setStatus(StatusConstants.PENDING);
+
+			this.mongoTemplate.insert(newEmployee);
+			return new ResponseEntity<String>(
+					"Employee successfully created with Employee id " + newEmployee.getEmployeeId(),
+					HttpStatus.CREATED);
+		} else {
+			return new ResponseEntity<String>("Employee already exist", HttpStatus.OK);
+		}
+
+	}
+
+	@Override
+	public ResponseEntity<List<Employee>> getEmployees(String searchInput) {
+		// TODO Auto-generated method stub
+		List<Employee> emptyEmployee = new ArrayList<Employee>();
+		Query query = new Query();
+		if (StringUtils.isNotEmpty(searchInput)) {
+
+			query = this.getSearchQueryEmployee(searchInput);
+		}
+
+		List<Employee> employees = this.mongoTemplate.find(query, Employee.class);
+
+		if (!CollectionUtils.isEmpty(employees)) {
+			return new ResponseEntity<List<Employee>>(employees, HttpStatus.FOUND);
+		} else {
+			return new ResponseEntity<List<Employee>>(emptyEmployee, HttpStatus.OK);
+		}
+	}
+
+	@Override
+	public ResponseEntity<Employee> getEmployeeById(String employeeId) {
+		Query query = new Query();
+		if (StringUtils.isNotEmpty(employeeId)) {
+
+			query.addCriteria(Criteria.where("employeeId").is(employeeId));
+
+			Employee employee = this.mongoTemplate.findOne(query, Employee.class);
+
+			if (employee != null)
+				return new ResponseEntity<Employee>(employee, HttpStatus.FOUND);
+			else
+				return new ResponseEntity<Employee>(new Employee(), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Employee>(new Employee(), HttpStatus.OK);
+		}
+	}
+
+	@Override
+	public ResponseEntity<?> getEmployeeByIdWithTask(String employeeId) {
+		Query query = new Query();
+		List<Task> tasks = new ArrayList<Task>();
+
+		if (StringUtils.isNotEmpty(employeeId)) {
+
+			query.addCriteria(Criteria.where("employeeId").is(employeeId));
+
+			tasks = this.mongoTemplate.find(query, Task.class);
+
+		}
+
+		return new ResponseEntity<List<Task>>(tasks, HttpStatus.FOUND);
+
+	}
+
+	@Override
+	public ResponseEntity<?> addBlockers(String employeeId, List<Blocker> blockers) {
+		Query query = new Query();
+		if (StringUtils.isNotEmpty(employeeId)) {
+
+			query.addCriteria(Criteria.where("employeeId").is(employeeId));
+		}
+		Employee employee = this.mongoTemplate.findOne(query, Employee.class);
+
+		if (employee != null) {
+			employee.setBlocker(blockers);
+			this.mongoTemplate.insert(employee);
+
+			return new ResponseEntity<Employee>(employee, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Employee>(new Employee(), HttpStatus.OK);
+		}
+
+	}
+
+	@Override
+	public ResponseEntity<Employee> updateEmployee(UpdateEmployeeRequest request) {
+
+		Query query = new Query();
+		query.addCriteria(Criteria.where("employeeId").is(request.getEmployeeId()));
+
+		Employee employee = this.mongoTemplate.findOne(query, Employee.class);
+		if (employee != null) {
+
+			if (request.getEmployeeName() != null)
+				employee.setEmployeeName(request.getEmployeeName());
+
+			if (request.getEmployeeEmailId() != null)
+				employee.setEmployeeEmailId(request.getEmployeeEmailId());
+			if (request.getPhone() != null)
+				employee.setPhone(request.getPhone());
+			if (request.getAddress().getCity() != null)
+
+				employee.getAddress().setCity(request.getAddress().getCity());
+			if (request.getAddress().getCountry() != null)
+				employee.getAddress().setCountry(request.getAddress().getCountry());
+			if (request.getAddress().getLane() != null)
+				employee.getAddress().setLane(request.getAddress().getLane());
+			if (request.getAddress().getState() != null)
+				employee.getAddress().setState(request.getAddress().getState());
+			if (request.getAddress().getStreet() != null)
+				employee.getAddress().setStreet(request.getAddress().getStreet());
+			if (request.getAddress().getZipCode() != null)
+				employee.getAddress().setZipCode(request.getAddress().getZipCode());
+			
+			this.mongoTemplate.save(employee);
+			return new ResponseEntity<Employee>(employee, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Employee>(new Employee(), HttpStatus.OK);
+		}
+	}
+
+	@Override
+	public ResponseEntity<Boolean> deleteEmployee(String employeeId) {
+		boolean flag = false;
+		if (StringUtils.isNotEmpty(employeeId)) {
+			Query query = new Query();
+			query.addCriteria(Criteria.where("employeeId").is(employeeId));
+			Employee employee = this.mongoTemplate.findOne(query, Employee.class);
+
+			if (employee != null) {
+				employee.setStatus(StatusConstants.INACTIVE);
+				this.mongoTemplate.save(employee);
+				flag = true;
+			} else {
+				flag = false;
+
+			}
+		} else {
+			flag = false;
+		}
+		return new ResponseEntity<Boolean>(flag, HttpStatus.OK);
+	}
+
+	@Override
+	public ResponseEntity<?> getEmployeeTrack(String managerId) {
+		List<List<Employee>> allemployees  = new ArrayList<List<Employee>>();
+		List<Employee> employees1 = new ArrayList<Employee>();
+		List<Employee> inneremployees=new ArrayList<Employee>();
+	int count=0;
+		if (StringUtils.isNotEmpty(managerId)) {
+			
+			
+			employees1=getTrack(managerId);
+
+			allemployees.add(employees1);
+			
+			do {
+				List<Employee> tempemployee=new ArrayList<Employee>();
+				
+				count=0;
+				if (!CollectionUtils.isEmpty(employees1)) {
+                   
+					
+					
+					
+					for(Employee e:employees1)
+					{  
+					
+					inneremployees = getTrack(e.getEmployeeId());
+					inneremployees.forEach(e1->tempemployee.add(e1));
+					
+						if(inneremployees.size()!=0)
+						allemployees.add(inneremployees);
+						
+					}
+					employees1=new ArrayList<Employee>(tempemployee);
+					
+					
+					
+				}
+			
+			count=tempemployee.size();	
+			} while (count!= 0);
+
+		}
+
+		return new ResponseEntity<List<List<Employee>>>(allemployees, HttpStatus.OK);
+
+	}
+
+	public List<Employee> getTrack(String managerId) {
+		List<Employee> employees = null;
+		if (StringUtils.isNotEmpty(managerId)) {
+			Query query = new Query();
+			query.addCriteria(Criteria.where("managerId").is(managerId));
+			employees = this.mongoTemplate.find(query, Employee.class);
+			
+		}
+		return employees;
+	}
+
+	public Query getSearchQueryEmployee(String searchInput) {
+		Query query = new Query();
+		List<Criteria> criterias = new LinkedList<>();
+		Criteria searchCriteria = new Criteria();
+		searchCriteria.orOperator(
+				Criteria.where("employeeId")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+
+				Criteria.where("employeeName")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+
+				Criteria.where("employeeEmailId")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+
+				Criteria.where("address.city")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+				Criteria.where("address.state")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+				Criteria.where("address.country")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+				Criteria.where("address.street")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+				Criteria.where("address.lane")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+				Criteria.where("address.zipCode")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+				Criteria.where("phone")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)));
+
+		criterias.add(searchCriteria);
+		if (!CollectionUtils.isEmpty(criterias)) {
+			Criteria criteria = new Criteria();
+			criteria.andOperator(criterias.stream().toArray(Criteria[]::new));
+			query.addCriteria(criteria);
+		}
+		return query;
+
+	}
+
+	@Override
+	public ResponseEntity<String> createTask(CreateTaskRequest request) {
+		// TODO Auto-generated method stub
+		Random rand = new Random();
+		String taskNameSub = null;
+		Task newTask = new Task();
+		BeanUtils.copyProperties(request, newTask);
+
+		if (StringUtils.isNotEmpty(newTask.getTaskName()) && newTask.getTaskName() != null) {
+
+			if (newTask.getTaskName().length() > 3)
+				taskNameSub = newTask.getTaskName().substring(0, 3);
+			else
+				taskNameSub = newTask.getTaskName();
+
+		}
+		newTask.setTaskId(taskNameSub + 1 + rand.nextInt(99));
+		newTask.setStatus(StatusConstants.ACTIVE);
+		this.mongoTemplate.insert(newTask);
+		return new ResponseEntity<String>("Task successfully created with Task id " + newTask.getTaskId(),
+				HttpStatus.CREATED);
+
+	}
+
+	@Override
+	public ResponseEntity<List<Task>> getTasks(String searchInput) {
+		// TODO Auto-generated method stub
+		List<Task> emptyTask = new ArrayList<Task>();
+		Query query = new Query();
+		if (StringUtils.isNotEmpty(searchInput)) {
+
+			query = this.getSearchQueryTask(searchInput);
+		}
+
+		List<Task> tasks = this.mongoTemplate.find(query, Task.class);
+
+		if (!CollectionUtils.isEmpty(tasks)) {
+			return new ResponseEntity<List<Task>>(tasks, HttpStatus.FOUND);
+		} else {
+			return new ResponseEntity<List<Task>>(emptyTask, HttpStatus.OK);
+		}
+	}
+
+	@Override
+	public ResponseEntity<Task> getTaskById(String taskId) {
+		Query query = new Query();
+		if (StringUtils.isNotEmpty(taskId)) {
+
+			query.addCriteria(Criteria.where("taskId").is(taskId));
+
+			Task task = this.mongoTemplate.findOne(query, Task.class);
+
+			if (task != null)
+				return new ResponseEntity<Task>(task, HttpStatus.FOUND);
+			else
+				return new ResponseEntity<Task>(new Task(), HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Task>(new Task(), HttpStatus.OK);
+		}
+	}
+
+	@Override
+	public ResponseEntity<Task> updateTask(UpdateTaskRequest request) {
+
+		Query query = new Query();
+		query.addCriteria(Criteria.where("taskId").is(request.getTaskId()));
+
+		Task task = this.mongoTemplate.findOne(query, Task.class);
+		if (task != null) {
+
+			if (request.getTaskName() != null)
+				task.setTaskName(request.getTaskName());
+
+			if (request.getEmployeeId() != null)
+				task.setEmployeeId(request.getEmployeeId());
+			if (request.getProjectName() != null)
+				task.setProjectName(request.getProjectName());
+			if (request.getActualCompletionDate() != null)
+
+				task.setActualCompletionDate(request.getActualCompletionDate());
+			if (request.getEstimatedCompletionDate() != null)
+
+				task.setEstimatedCompletionDate(request.getEstimatedCompletionDate());
+			this.mongoTemplate.save(task);
+			return new ResponseEntity<Task>(task, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<Task>(new Task(), HttpStatus.OK);
+		}
+	}
+
+	@Override
+	public ResponseEntity<Boolean> deleteTask(String taskId) {
+		boolean flag = false;
+		if (StringUtils.isNotEmpty(taskId)) {
+			Query query = new Query();
+			query.addCriteria(Criteria.where("taskId").is(taskId));
+			Task task = this.mongoTemplate.findOne(query, Task.class);
+
+			if (task != null) {
+				task.setStatus(StatusConstants.INACTIVE);
+				this.mongoTemplate.save(task);
+				flag = true;
+			} else {
+				flag = false;
+
+			}
+		} else {
+			flag = false;
+		}
+		return new ResponseEntity<Boolean>(flag, HttpStatus.OK);
+	}
+
+	public Query getSearchQueryTask(String searchInput) {
+		Query query = new Query();
+		List<Criteria> criterias = new LinkedList<>();
+		Criteria searchCriteria = new Criteria();
+		searchCriteria.orOperator(
+				Criteria.where("taskId")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+
+				Criteria.where("taskName")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+
+				Criteria.where("employeeId")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)),
+
+				Criteria.where("projectName")
+						.regex(Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE)));
+
+		criterias.add(searchCriteria);
+		if (!CollectionUtils.isEmpty(criterias)) {
+			Criteria criteria = new Criteria();
+			criteria.andOperator(criterias.stream().toArray(Criteria[]::new));
+			query.addCriteria(criteria);
+		}
+		return query;
+
+	}
+
+}

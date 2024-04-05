@@ -1,0 +1,73 @@
+package com.solution;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpStatus;
+
+import com.solution.model.Address;
+
+import com.solution.model.Employee;
+import com.solution.service.impl.EmployeeServiceImpl;
+
+@SpringBootTest(classes={EmployeeServiceImplTest.class})
+public class EmployeeServiceImplTest {
+@InjectMocks
+private EmployeeServiceImpl employeeServiceImpl;
+@Mock
+private MongoTemplate mongoTemplate;
+
+public List<Employee> employees;
+Employee employee1;
+Employee employee2;
+Employee employee3;
+Address address;
+@BeforeEach
+public void init()
+{
+	address = new Address("lane7", "street7", "city7", "state7", "country", "zipcode6");
+	employee1=new Employee("emp1","aaaa","aaa@gmail.com","man1","mmmm1","mmm1@gmail.com","33214325",address,"aaa","pending");
+	employee2=new Employee("emp2","bbbb","bbb@gmail.com","man1","mmmm1","mmm1@gmail.com","675465554",address,"bbb","pending");
+	employee3=new Employee("emp3","cccc","ccc@gmail.com","man1","mmmm1","mmm1@gmail.com","33214325",address,"aaa","pending");
+
+	employees = new ArrayList<Employee>();
+
+	employees.add(employee1);
+	employees.add(employee1);
+	employees.add(employee1);
+}
+@Test
+public void getEmployeesTest()
+{ 
+	
+	when(mongoTemplate.find(Mockito.any(Query.class), Mockito.eq(Employee.class))).thenReturn(employees);
+	
+
+	assertEquals(HttpStatus.FOUND, employeeServiceImpl.getEmployees("aaa").getStatusCode());
+}
+
+@Test
+public void getEmployeeByIdTest()
+{
+	when(mongoTemplate.findOne(Mockito.any(Query.class), Mockito.eq(Employee.class))).thenReturn(employee1);
+	assertEquals(HttpStatus.FOUND,employeeServiceImpl.getEmployeeById("emp1").getStatusCode());
+	when(mongoTemplate.findOne(Mockito.any(Query.class), Mockito.eq(Employee.class))).thenReturn(employee2);
+	assertEquals(HttpStatus.FOUND,employeeServiceImpl.getEmployeeById("emp2").getStatusCode());
+}
+
+}
+
+

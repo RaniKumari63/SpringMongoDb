@@ -1,0 +1,115 @@
+package com.solution;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+
+import org.springframework.boot.test.context.SpringBootTest;
+
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import com.solution.model.Address;
+import com.solution.model.CreateCustomerRequest;
+import com.solution.model.Customer;
+import com.solution.model.UpdateCustomerRequest;
+import com.solution.service.impl.CustomerServiceImpl;
+
+@SpringBootTest(classes = { CustomerServiceImplTest.class })
+public class CustomerServiceImplTest {
+
+	@InjectMocks
+	private CustomerServiceImpl customerServiceImpl;
+	@Mock
+	private MongoTemplate mongoTemplate;
+
+	public List<Customer> customers;
+
+	@Test
+	@Order(1)
+	public void getCustomersTest() {
+
+		Address address = new Address("lane7", "street7", "city7", "state7", "country", "zipcode6");
+		Date date = new Date();
+		customers = new ArrayList<Customer>();
+		customers.add(new Customer("aaa56aaa", "aaaa", "aaaa", "aaa@gmail.com", "87897", address, date, date, "aaa",
+				"approved", "customer"));
+		customers.add(new Customer("bbb56bbb", "bbbb", "bbb", "bbb@gmail.com", "778687", address, date, date, "bbbb",
+				"approved", "customer"));
+		customers.add(new Customer("cccc56ccc", "cccc", "cccc", "ccc@gmail.com", "35355", address, date, date, "ccc",
+				"approved", "customer"));
+
+		when(mongoTemplate.find(Mockito.any(Query.class), Mockito.eq(Customer.class))).thenReturn(customers);
+
+		assertEquals(3, customerServiceImpl.getCustomers("aaa").size());
+	}
+
+	@Test
+	public void getCustomerByIdTest() {
+		Address address = new Address("lane7", "street7", "city7", "state7", "country", "zipcode6");
+		Date date = new Date();
+		Customer customer1 = new Customer("aaa56aaa", "aaaa", "aaaa", "aaa@gmail.com", "87897", address, date, date,
+				"aaa", "approved", "customer");
+		Customer customer2 = new Customer("bbb56bbb", "bbbb", "bbb", "bbb@gmail.com", "778687", address, date, date,
+				"bbbb", "approved", "customer");
+		Customer customer3 = new Customer("cccc56ccc", "cccc", "cccc", "ccc@gmail.com", "35355", address, date, date,
+				"ccc", "approved", "customer");
+
+		when(mongoTemplate.findOne(Mockito.any(Query.class), Mockito.eq(Customer.class))).thenReturn(customer1);
+
+
+		assertEquals("aaa56aaa", customerServiceImpl.getCustomerById("aaa56aaa").getId());
+		when(mongoTemplate.findOne(Mockito.any(Query.class), Mockito.eq(Customer.class))).thenReturn(customer2);
+		assertEquals("bbb56bbb", customerServiceImpl.getCustomerById("bbb56bbb").getId());
+	}
+
+	@Test
+	public void createCustomerTest() {
+		Address address = new Address("lane7", "street7", "city7", "state7", "country", "zipcode6");
+		Date date = new Date();
+		CreateCustomerRequest request = new CreateCustomerRequest("aaaa", "aaaa", "aaa@gmail.com", "87897", address,
+				"aaa", "customer");
+		Customer customer = new Customer("aaa55aaa", "aaaa", "aaaa", "aaa@gmail.com", "87897", address, date, date,
+				"aaa", "pending", "customer");
+		when(mongoTemplate.insert(customer)).thenReturn(customer);
+	
+		assertEquals("", customerServiceImpl.createCustomer(request));
+	}
+	
+	@Test
+	public void upDateCustomerTest() {
+		Address address = new Address("lane7", "street7", "city7", "state7", "country", "zipcode6");
+		Date date = new Date();
+		UpdateCustomerRequest request = new UpdateCustomerRequest("aaa55aaa","aaaa", "aaaa", "aaa@gmail.com", "87897", address,
+				"aaa", "customer");
+		Customer customer = new Customer("aaa55aaa", "aaaa", "aaaa", "aaa@gmail.com", "87897", address, date, date,
+				"aaa", "pending", "customer");
+		when(mongoTemplate.save(customer)).thenReturn(customer);
+	
+		assertEquals("", customerServiceImpl.updateCustomer(request));
+	}
+
+	/*
+	 * @Test public void deleteCustomerTest() { Address address = new
+	 * Address("lane7", "street7", "city7", "state7", "country", "zipcode6"); Date
+	 * date = new Date(); String id = "aaa55aaa"; Customer customer = new
+	 * Customer("aaa55aaa", "aaaa", "aaaa", "aaa@gmail.com", "87897", address, date,
+	 * date, "aaa", "approved", "customer");
+	 * when(mongoTemplate.save(customer)).thenReturn(customer); assertEquals(true,
+	 * customerServiceImpl.deleteCustomer(id)); }
+	 */
+
+}

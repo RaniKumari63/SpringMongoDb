@@ -1,0 +1,48 @@
+package com.solution;
+
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
+import javax.management.Query;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.core.MongoTemplate;
+
+import com.solution.model.Address;
+import com.solution.model.Employee;
+
+@SpringBootTest(classes= {EmployeeServiceImplTest.class})
+public class EmployeeServiceImplTest {
+@InjectMocks
+EmployeeServiceImplTest employeeServiceImpl;
+@Mock
+MongoTemplate mongoTemplate;
+
+public List<Employee> employees;
+Employee employee1;
+Employee employee2;
+Employee employee3;
+Address address;
+@BeforeEach
+public void init()
+{
+	address = new Address("lane7", "street7", "city7", "state7", "country", "zipcode6");
+	employee1=new Employee("emp1","aaaa","eee@gmail.com","man1","mmmm1","mmm1@gmail.com","33214325",address,"hyd","aaa","pending");
+	
+}
+@Test
+public void getEmployeesTest()
+{ 
+	
+	when(mongoTemplate.find(Mockito.any(Query.class), Mockito.eq(Employee.class))).thenReturn(employees);
+
+	
+}
+
+}

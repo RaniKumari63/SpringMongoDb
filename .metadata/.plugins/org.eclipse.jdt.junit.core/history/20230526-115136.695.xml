@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?><testrun name="EmployeeServiceImplTest" project="SolutionDashboard" tests="1" started="1" failures="0" errors="0" ignored="0">
+  <testsuite name="com.solution.EmployeeServiceImplTest" time="0.105" displayname="EmployeeServiceImplTest" uniqueid="[engine:junit-jupiter]/[class:com.solution.EmployeeServiceImplTest]">
+    <testcase name="getEmployeesTest" classname="com.solution.EmployeeServiceImplTest" time="0.105" displayname="getEmployeesTest()" uniqueid="[engine:junit-jupiter]/[class:com.solution.EmployeeServiceImplTest]/[method:getEmployeesTest()]"/>
+  </testsuite>
+</testrun>

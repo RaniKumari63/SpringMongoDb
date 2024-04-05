@@ -1,0 +1,5 @@
+package com.suchiit.model;
+
+public class User {
+
+}
